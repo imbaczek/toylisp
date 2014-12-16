@@ -1,0 +1,8 @@
+[package]
+
+name = "toylisp"
+version = "0.0.1"
+authors = ["Marek Baczyński <imbaczek@gmail.com>"]
+
+[[bin]]
+name = "toylisp"
