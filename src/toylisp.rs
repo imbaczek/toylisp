@@ -7,10 +7,10 @@ mod eval;
 fn rep(interp: &mut eval::Interpreter, s: &str) -> eval::EvalResult {
 	let mut lexer = lexer::Lexer::new(s.as_slice());
 	let r = lexer.scan();
-	println!("lex:   {}", r);
+	println!("lex:   {:?}", r);
 	let rr = try!(r);
 	let parsed = parser::parse(rr);
-	println!("parse: {}", parsed);
+	println!("parse: {:?}", parsed);
 	let ast = try!(parsed);
 	interp.eval_globals(&ast)
 }
@@ -21,7 +21,7 @@ fn main() {
 	for line in io::stdin().lock().lines() {
 		let s = line.unwrap();
 		let val = rep(&mut interp, s.as_slice());
-		println!("result: {}", val);
+		println!("result: {:?}", val);
 		print!(">>> ");
 	}
 }

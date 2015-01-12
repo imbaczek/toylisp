@@ -1,6 +1,6 @@
 use std::io;
 
-#[deriving(Show,Clone,PartialEq)]
+#[derive(Show,Clone,PartialEq)]
 pub enum Token {
 	Nil, // to avoid Result<Option<Token>, ...>
 	OpenParen,
@@ -80,7 +80,7 @@ impl<'a> Lexer<'a> {
 				Ok(Nil)
 			},
 			' ' | '\t' | '\r' | '\n' | '\x1f' => Ok(Nil),  // whitespace
-			_ => Err(format!("invalid input in normal state: {} ({:x})", c, c as int))
+			_ => Err(format!("invalid input in normal state: {} ({:x})", c, c as isize))
 		}
 	}
 
@@ -103,7 +103,7 @@ impl<'a> Lexer<'a> {
 				self.state = State::Normal;
 				Ok(Nil)
 			},  // whitespace
-			_ => Err(format!("invalid input in symbol state: {} ({:x})", c, c as int))
+			_ => Err(format!("invalid input in symbol state: {} ({:x})", c, c as isize))
 		}
 	}
 
@@ -131,7 +131,7 @@ impl<'a> Lexer<'a> {
 				self.state = State::Normal;
 				Ok(Nil)
 			},  // whitespace
-			_ => Err(format!("invalid input in number state: {} ({:x})", c, c as int))
+			_ => Err(format!("invalid input in number state: {} ({:x})", c, c as isize))
 		}
 	}
 

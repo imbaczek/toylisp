@@ -31,8 +31,8 @@ pub enum Value {
 impl fmt::Show for Mutex<Value> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self.try_lock() {
-			Some(x) => write!(f, "{}", x.deref()),
-			None => write!(f, "<locked>"),
+			Ok(x) => write!(f, "{:?}", x.deref()),
+			Err(_) => write!(f, "<locked>"),
 		}
 	}
 }
@@ -41,11 +41,11 @@ impl fmt::Show for Value {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			&Value::Nil => write!(f, "Nil"),
-			&Value::List(ref x) => write!(f, "List({})", x),
-			&Value::Bool(ref b) => write!(f, "Bool({})", b),
-			&Value::Int(ref i) => write!(f, "Int({})", i),
-			&Value::BuiltinFunc(ref func) => write!(f, "BuiltinFunc({})", func),
-			&Value::SpecialForm(ref sf) => write!(f, "SpecialForm({})", sf),
+			&Value::List(ref x) => write!(f, "List({:?})", x),
+			&Value::Bool(ref b) => write!(f, "Bool({:?})", b),
+			&Value::Int(ref i) => write!(f, "Int({:?})", i),
+			&Value::BuiltinFunc(ref func) => write!(f, "BuiltinFunc({:?})", func),
+			&Value::SpecialForm(ref sf) => write!(f, "SpecialForm({:?})", sf),
 			_ => write!(f, "UnknownValue")
 		}
 	}
@@ -128,7 +128,7 @@ impl Interpreter {
 				Some(val) => Ok(val.clone())
 			},
 			&Node::List(ref vec) => self.eval_list(ast, &scope, vec.as_slice()),
-			_ => Err(format!("{} not implemeted", ast)),
+			_ => Err(format!("{:?} not implemeted", ast)),
 		}
 	}
 
@@ -170,7 +170,7 @@ impl Interpreter {
 
 		match fun {
 			&Value::BuiltinFunc(ref name) => self.call_builtin(scope, name.as_slice(), args),
-			_ => Err(format!("calling {} not implemented", fun))
+			_ => Err(format!("calling {:?} not implemented", fun))
 		}
 	}
 
@@ -189,7 +189,7 @@ impl Interpreter {
 		for v in args.iter() {
 			match v.lock().deref() {
 				&Value::Int(i) => r += i,
-				_ => return Err(format!("{} is not an int", v))
+				_ => return Err(format!("{:?} is not an int", v))
 			}
 		}
 		Ok(Arc::new(Mutex::new(Value::Int(r))))

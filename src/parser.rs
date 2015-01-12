@@ -1,10 +1,10 @@
 use std::io;
-use std::slice::Items;
+use std::slice::Iter;
 
 use lexer::Token;
 
 
-#[deriving(Show,Clone,PartialEq)]
+#[derive(Show,Clone,PartialEq)]
 pub enum Node {
 	Nothing,
 	List(Vec<Node>),
@@ -24,27 +24,27 @@ pub fn parse(tokens: &[Token]) -> Result<Node, String> {
 }
 
 
-fn next(it: &mut Items<Token>) -> Result<Token, String> {
+fn next(it: &mut Iter<Token>) -> Result<Token, String> {
 	let tok = it.next();
-	println!("next: {}", tok);
+	println!("next: {:?}", tok);
 	match tok {
 		Some(x) => Ok(x.clone()), // FIXME
 		None => Err(format!("unexpected end of input"))
 	}
 }
 
-fn peek(it: &mut Items<Token>, idx: uint) -> Result<Token, String> {
+fn peek(it: &mut Iter<Token>, idx: usize) -> Result<Token, String> {
 	let tok = it.idx(idx);
-	println!("peek: {}", tok);
+	println!("peek: {:?}", tok);
 	match tok {
 		Some(x) => Ok(x.clone()),
 		None => Err(format!("unexpected end of input"))
 	}
 }
 
-fn _parse(it: &mut Items<Token>) -> Result<Node, String> {
+fn _parse(it: &mut Iter<Token>) -> Result<Node, String> {
 	let x = { try!(next(it)) };
-	println!("_parse got {}", x)
+	println!("_parse got {:?}", x);
 	match x {
 		Token::OpenParen => { Ok(try!(parse_list(it))) },
 		Token::Symbol(s) => Ok(Node::Symbol(s)),
@@ -53,13 +53,13 @@ fn _parse(it: &mut Items<Token>) -> Result<Node, String> {
 	}
 }
 
-fn parse_list(it: &mut Items<Token>) -> Result<Node, String> {
+fn parse_list(it: &mut Iter<Token>) -> Result<Node, String> {
 	let mut list: Vec<Node> = vec!();
 
 	loop {
 		// do not consume yet, leave that to _parse()
 		let x = { try!(peek(it, 0)) };
-		println!("parse_list peeked {}", x)
+		println!("parse_list peeked {:?}", x);
 		match x {
 			Token::Nil => { try!(next(it)); },
 			Token::CloseParen => {
@@ -69,7 +69,7 @@ fn parse_list(it: &mut Items<Token>) -> Result<Node, String> {
 			},
 			_ => {
 				let node = try!(_parse(it));
-				println!("parse_list received from _parse: {}", node);
+				println!("parse_list received from _parse: {:?}", node);
 				list.push(node);
 			}
 		}
@@ -77,11 +77,11 @@ fn parse_list(it: &mut Items<Token>) -> Result<Node, String> {
 }
 
 fn parse_number(num: &str) -> Result<Node, String> {
-	let i:Option<i64> = from_str(num);
+	let i:Option<i64> = num.parse();
 	if i.is_some() {
 		return Ok(Node::IntLiteral(i.unwrap()));
 	}
-	let f:Option<f64> = from_str(num);
+	let f:Option<f64> = num.parse();
 	if f.is_some() {
 		return Ok(Node::FloatLiteral(f.unwrap()));
 	}
