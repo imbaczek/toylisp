@@ -4,7 +4,7 @@ use std::slice::Iter;
 use lexer::Token;
 
 
-#[derive(Show,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum Node {
 	Nothing,
 	List(Vec<Node>),

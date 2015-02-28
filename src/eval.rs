@@ -11,7 +11,7 @@ pub type BoxedScope = EvalBox<Scope>;
 pub type EvalResult = Result<BoxedValue, String>;
 
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub enum Value {
 	Nil,
 	List(Vec<BoxedValue>),
@@ -61,7 +61,7 @@ impl Value {
 }
 
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Scope {
 	vars: HashMap<String, BoxedValue>,
 	parent: Option<BoxedScope>

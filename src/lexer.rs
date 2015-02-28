@@ -1,6 +1,6 @@
 use std::io;
 
-#[derive(Show,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum Token {
 	Nil, // to avoid Result<Option<Token>, ...>
 	OpenParen,
