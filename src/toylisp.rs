@@ -1,4 +1,4 @@
-use std::io;
+use std::old_io;
 
 mod lexer;
 mod parser;
@@ -18,7 +18,8 @@ fn rep(interp: &mut eval::Interpreter, s: &str) -> eval::EvalResult {
 fn main() {
 	let mut interp = eval::Interpreter::new();
 	print!(">>> ");
-	for line in io::stdin().lock().lines() {
+	let mut stdin = old_io::stdin();
+	for line in stdin.lock().lines() {
 		let s = line.unwrap();
 		let val = rep(&mut interp, s.as_slice());
 		println!("result: {:?}", val);

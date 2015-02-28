@@ -1,6 +1,7 @@
 use std::collections::{HashMap,HashSet};
 use std::sync::{Arc,Mutex};
 use std::fmt;
+use std::ops::Deref;
 
 use parser::Node;
 
@@ -28,16 +29,7 @@ pub enum Value {
 	SpecialForm(String)
 }
 
-impl fmt::Show for Mutex<Value> {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		match self.try_lock() {
-			Ok(x) => write!(f, "{:?}", x.deref()),
-			Err(_) => write!(f, "<locked>"),
-		}
-	}
-}
-
-impl fmt::Show for Value {
+impl fmt::Debug for Value {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			&Value::Nil => write!(f, "Nil"),
@@ -87,7 +79,7 @@ impl Scope {
 		match self.vars.get(key.as_slice()) {
 			Some(val) => Some(val.clone()),
 			None => match self.parent {
-				Some(ref p) => p.lock().get(key),
+				Some(ref p) => p.lock().unwrap().get(key),
 				None => None
 			}
 		}
@@ -123,7 +115,7 @@ impl Interpreter {
 		match ast {
 			&Node::IntLiteral(i) => Ok(Arc::new(Mutex::new(Value::Int(i)))),
 			&Node::FloatLiteral(f) => Ok(Arc::new(Mutex::new(Value::Float(f)))),
-			&Node::Symbol(ref s) => match scope.lock().get(s.as_slice()) {
+			&Node::Symbol(ref s) => match scope.lock().unwrap().get(s.as_slice()) {
 				None => Err(format!("name '{}' not found in scope", s)),
 				Some(val) => Ok(val.clone())
 			},
@@ -139,8 +131,8 @@ impl Interpreter {
 
 	fn eval_list(&mut self, ast: &Node, scope: &BoxedScope, argv: &[Node]) -> EvalResult {
 		if let &Node::Symbol(ref sym) = &argv[0] {
-			if let Some(v) = scope.lock().get(sym.as_slice()) {
-				if let &Value::SpecialForm(ref name) = v.lock().deref() {
+			if let Some(v) = scope.lock().unwrap().get(sym.as_slice()) {
+				if let &Value::SpecialForm(ref name) = v.lock().unwrap().deref() {
 					return self.eval_special(ast, name.as_slice(), scope, argv)
 				}
 			}
@@ -154,19 +146,18 @@ impl Interpreter {
 	}
 
 	fn eval_special(&mut self, ast: &Node, name: &str, scope: &BoxedScope, argv: &[Node]) -> EvalResult {
-		let argvit = argv.iter();
-		let args = argvit.slice_from_or_fail(&1);
+		let args = &argv[1..];
 		match name {
 			"def" => self.special_def(scope, args),
-			_ => Err(format!("special form {} not implemented", name))
+			_ => Err(format!("special form {:?} not implemented", name))
 		}
 	}
 
 	fn funcall(&mut self, scope: &BoxedScope, argv: Vec<BoxedValue>) -> EvalResult {
-		let argvit = argv.iter();
-		let args = argvit.slice_from_or_fail(&1);
+		let args = &argv[1..];
 		let funmut = argv[0].lock();
-		let fun = funmut.deref();
+		let funtex = funmut.unwrap();
+		let fun = funtex.deref();
 
 		match fun {
 			&Value::BuiltinFunc(ref name) => self.call_builtin(scope, name.as_slice(), args),
@@ -187,7 +178,7 @@ impl Interpreter {
 	fn builtin_addi(&self, scope: &BoxedScope, args: &[BoxedValue]) -> EvalResult {
 		let mut r = 0i64;
 		for v in args.iter() {
-			match v.lock().deref() {
+			match v.lock().unwrap().deref() {
 				&Value::Int(i) => r += i,
 				_ => return Err(format!("{:?} is not an int", v))
 			}
@@ -208,13 +199,13 @@ impl Interpreter {
 
 		let name = match sym {
 			&Node::Symbol(ref name) => name,
-			_ => return Err(format!("{} is not a symbol", sym))
+			_ => return Err(format!("{:?} is not a symbol", sym))
 		};
 
 		let evaled = try!(self.eval(val, scope.clone()));
 		let eval2 = evaled.clone();
 		// need RefCell here I guess
-		scope.lock().insert(name.clone(), evaled);
+		scope.lock().unwrap().insert(name.clone(), evaled);
 
 		Ok(eval2)
 	}

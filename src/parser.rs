@@ -1,6 +1,8 @@
 use std::io;
 use std::slice::Iter;
 
+use std::iter::RandomAccessIterator;
+
 use lexer::Token;
 
 
@@ -34,6 +36,7 @@ fn next(it: &mut Iter<Token>) -> Result<Token, String> {
 }
 
 fn peek(it: &mut Iter<Token>, idx: usize) -> Result<Token, String> {
+
 	let tok = it.idx(idx);
 	println!("peek: {:?}", tok);
 	match tok {
@@ -77,12 +80,12 @@ fn parse_list(it: &mut Iter<Token>) -> Result<Node, String> {
 }
 
 fn parse_number(num: &str) -> Result<Node, String> {
-	let i:Option<i64> = num.parse();
-	if i.is_some() {
+	let i = num.parse::<i64>();
+	if i.is_ok() {
 		return Ok(Node::IntLiteral(i.unwrap()));
 	}
-	let f:Option<f64> = num.parse();
-	if f.is_some() {
+	let f = num.parse::<f64>();
+	if f.is_ok() {
 		return Ok(Node::FloatLiteral(f.unwrap()));
 	}
 	Err(format!("couldn't parse number: {}", num))
